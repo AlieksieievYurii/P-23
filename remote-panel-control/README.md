@@ -1,13 +1,6 @@
-# Tank
-This is my project where I've decided to create DIY tank platform.
+# Radio Control Transmiter
 
-# Project Structure
-* `platform` - the folder contains sources and docs regarding the platform itself.
-* `rc` - the folder contains sources and docs regarding radio controll panel
-
-# IMPORTANT
-In this project, the connection between the tank and radio control panel is done by nRF24 module.
-The following libraries are used:
+The module uses two libraries:
 * [Radio Head](https://www.airspayce.com/mikem/arduino/RadioHead/index.html) - simple API for nRF24.
 * [Arduino Cryptography Library](https://rweather.github.io/arduinolibs/index.html) - the radio connection is encrypted by using this library.
 
