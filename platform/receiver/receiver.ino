@@ -9,8 +9,6 @@
 RH_NRF24 nrf24;
 Speck cipher;
 RHEncryptedDriver driver(nrf24, cipher);
-unsigned char encryptkey[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-
 
 void setup() {
   Serial.begin(9600);
@@ -24,7 +22,7 @@ void setup() {
   if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm))
     Serial.println("setRF failed"); 
     
-  cipher.setKey(encryptkey, sizeof(encryptkey));   
+  cipher.setKey(ENCRYPTION_KEY, sizeof(ENCRYPTION_KEY));   
 }
 
 void loop() {
@@ -37,7 +35,10 @@ void loop() {
     {
 //      RH_NRF24::printBuffer("request: ", buf, len);
       Serial.print("got request: ");
-      Serial.println((char*)buf);
+      for (int i = 0; i < len; i++)
+        Serial.print(buf[i]);
+      
+      Serial.println();
       
       // Send a reply
       uint8_t data[] = "And hello back"; // Dont make this too long
