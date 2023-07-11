@@ -1,5 +1,8 @@
 # Radio Control Transmiter
 
+![image](https://github.com/AlieksieievYurii/Tank/assets/39415360/212ac611-3172-49ab-b9de-fa17ce52816c)
+
+
 The module uses two libraries:
 * [Radio Head](https://www.airspayce.com/mikem/arduino/RadioHead/index.html) - simple API for nRF24.
 * [Arduino Cryptography Library](https://rweather.github.io/arduinolibs/index.html) - the radio connection is encrypted by using this library.
