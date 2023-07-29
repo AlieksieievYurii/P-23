@@ -44,7 +44,7 @@ void loop() {
       uint8_t data[] = "And hello back"; // Dont make this too long
       driver.send(data, sizeof(data));
       driver.waitPacketSent();
-      Serial.println("Sent a reply");
+      //Serial.println("Sent a reply");
     }
     else
     {
