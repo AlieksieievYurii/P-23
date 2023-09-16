@@ -26,6 +26,7 @@ The data has the size 20 bytes where each byte represents a state.
 |  0xA |  Prog Potentiometer. The range is from 0 to 255. |
 |  0xB |  Camera Movement Speed Potentiometer. The range is from 0 to 255. |
 |  0xC |  Contains light states. The first bit is _Back Switch_, the second is _Front Switch_, the third is _Long Switch_, the fourth is _Turret Switch_|
+|  0xD |  The first 3 bits(converting to hex) represents camera selection, where 0x0 - Front, 0x1 - Back, 0x2 - Turret, 0x3 - Gun. 0x4 - A, 0x5 - R | 
 
 ## External Interface
 The panel also has an external interface that allows it to connect different modules. The interface uses UART protocol.
