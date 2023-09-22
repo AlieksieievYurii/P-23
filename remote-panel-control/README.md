@@ -25,9 +25,8 @@ The data has the size 20 bytes where each byte represents a state.
 |  0x9 |  Arm Turret Speed Potentiometer. The range is from 0 to 255. |
 |  0xA |  Prog Potentiometer. The range is from 0 to 255. |
 |  0xB |  Camera Movement Speed Potentiometer. The range is from 0 to 255. |
-|  0xC |  Contains light states. Each positive bit means switch on. The first bit is _Back Switch_, the second is _Front Switch_, the third is _Long Switch_, the fourth is _Turret Switch_|
-|  0xD |  The first 3 bits(converting to hex) represents camera selection, where 0x0 - Front, 0x1 - Back, 0x2 - Turret, 0x3 - Gun. 0x4 - A, 0x5 - R |
-|  0xE | Each pair of bits represents light modes(00 - stable light, 01 - blinking, 10 - fast blinking). The first pair - _Back Switch_, the second is _Front Switch_, the third is _Long Switch_, the fourth is _Turret Switch_ |
+|  0xC |  Contains light states and camera selection. The first 4 bits represent light states: Each positive bit means switch on. The first bit is _Back Switch_, the second is _Front Switch_, the third is _Long Switch_, and the fourth is _Turret Switch_. The next 3 bits(converting to hex)  represents camera selection, where 0x0 - Front, 0x1 - Back, 0x2 - Turret, 0x3 - Gun. 0x4 - A, 0x5 - R|
+|  0xD | Each pair of bits represents light modes(00 - stable light, 01 - blinking, 10 - fast blinking). The first pair - _Back Switch_, the second is _Front Switch_, the third is _Long Switch_, the fourth is _Turret Switch_ |
 
 ## External Interface
 The panel also has an external interface that allows it to connect different modules. The interface uses UART protocol.
