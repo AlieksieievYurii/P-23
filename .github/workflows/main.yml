@@ -6,6 +6,8 @@ on: workflow_dispatch
 #     - main
 env:
   OSD_TARGET_BOARD: arduino:avr:nano
+  TANK_TARGET_BOARD: arduino:avr:mega
+  ARDUINO_CLI_LIBRARIES_DIR: /home/runner/Arduino
 
 jobs:
   compile_modules:
@@ -18,8 +20,15 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
           arduino-cli core install arduino:avr
+          
       - name: Install Libraries
-        run: arduino-cli config dump
+        run: | 
+          arduino-cli lib install RadioHead
+          sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
+          cat $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
         
       - name: Compiler platform/OSD module
         run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
+
+      - name: Compiler platform/receiver
+        run: arduino-cli compile -b $TANK_TARGET_BOARD -e ./platform/receiver
