@@ -4,6 +4,8 @@ on: workflow_dispatch
 #   push:
 #     branches:
 #     - main
+env:
+  OSD_TARGET_BOARD: arduino:avr:nano
 
 jobs:
   compile_modules:
@@ -12,10 +14,9 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: ls
-        run: cd .. && ls
       - name: "Install Arduino CLI" 
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
-      - name: test
-        run: arduino-cli --help
+          
+      - name: Compiler platform/OSD module
+        run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
