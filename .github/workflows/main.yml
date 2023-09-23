@@ -25,7 +25,7 @@ jobs:
         run: | 
           arduino-cli lib install RadioHead
           sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
-          cat $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
+          cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
         
       - name: Compiler platform/OSD module
         run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
