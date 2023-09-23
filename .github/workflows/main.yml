@@ -23,7 +23,7 @@ jobs:
           
       - name: Install Libraries
         run: | 
-          arduino-cli lib install RadioHead
+          arduino-cli lib install RadioHead PWMServo
           sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
           cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
         
