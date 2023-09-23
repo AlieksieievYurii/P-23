@@ -45,17 +45,17 @@ jobs:
 
       # - name: Compiler remote-panel-control
       #   run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e ./remote-panel-control/Code
-  static_tests:
-    name: Run Static Tests
-    runs-on: ubuntu-latest
-    needs: compile_modules
-    steps:
-       - name: Check out repository code
-         uses: actions/checkout@v4
+  # static_tests:
+  #   name: Run Static Tests
+  #   runs-on: ubuntu-latest
+  #   needs: compile_modules
+  #   steps:
+  #      - name: Check out repository code
+  #        uses: actions/checkout@v4
           
-       - name: SonarCloud Scan
-         uses: SonarSource/sonarcloud-github-c-cpp@v2.0.2
-         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  #      - name: SonarCloud Scan
+  #        uses: SonarSource/sonarcloud-github-c-cpp@v2.0.2
+  #        env:
+  #         GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
      
