@@ -17,19 +17,28 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      # - name: "Install Arduino CLI" 
-      #   run: |
-      #     curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
-      #     arduino-cli core install arduino:avr
+      - name: "Install Arduino CLI" 
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
+          arduino-cli core install arduino:avr
           
-      # - name: Install Libraries
-      #   run: | 
-      #     arduino-cli lib install RadioHead PWMServo "Adafruit SSD1306"
-      #     sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
-      #     cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
+      - name: Install Libraries
+        run: | 
+          arduino-cli lib install RadioHead PWMServo "Adafruit SSD1306"
+          sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
+          cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
         
-      # - name: Compiler platform/OSD module
-      #   run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
+      - name: Compiler platform/OSD module
+        run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
+
+      - name: Generate compilation database
+        run: arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
+
+      - name: SonarCloud Scan
+         uses: SonarSource/sonarcloud-github-c-cpp@v2.0.2
+         env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # - name: Compiler platform/receiver
       #   run: arduino-cli compile -b $TANK_TARGET_BOARD -e ./platform/receiver
