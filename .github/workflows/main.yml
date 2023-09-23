@@ -1,9 +1,12 @@
 name: tank-ci
-on: workflow_dispatch
-# on:
-#   push:
-#     branches:
-#     - main
+# on: workflow_dispatch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 env:
   OSD_TARGET_BOARD: arduino:avr:nano
   TANK_TARGET_BOARD: arduino:avr:mega
@@ -31,36 +34,23 @@ jobs:
       - name: Compiler platform/OSD module
         run: arduino-cli compile -b $OSD_TARGET_BOARD -e --warnings all ./platform/osd
 
-      - name: Generate compilation database
-        run: |
-          arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
-          cat ./compile_commands.json
-          apt-get update && apt-get install tree -y
-          cd /home/runner/work
-          tree
+      # - name: Generate compilation database
+      #   run: |
+      #     arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
+      #     cat ./compile_commands.json
+      #     apt-get update && apt-get install tree -y
+      #     cd /home/runner/work
+      #     tree
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: SonarCloud Scan
+      #   uses: SonarSource/sonarcloud-github-action@v2.0.2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # - name: Compiler platform/receiver
-      #   run: arduino-cli compile -b $TANK_TARGET_BOARD -e --warnings all ./platform/receiver
+      - name: Compiler platform/receiver
+        run: arduino-cli compile -b $TANK_TARGET_BOARD -e --warnings all ./platform/receiver
 
-      # - name: Compiler remote-panel-control
-      #   run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e --warnings all ./remote-panel-control/Code
-  # static_tests:
-  #   name: Run Static Tests
-  #   runs-on: ubuntu-latest
-  #   needs: compile_modules
-  #   steps:
-  #      - name: Check out repository code
-  #        uses: actions/checkout@v4
-          
-  #      - name: SonarCloud Scan
-  #        uses: SonarSource/sonarcloud-github-c-cpp@v2.0.2
-  #        env:
-  #         GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-     
+      - name: Compiler remote-panel-control
+        run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e --warnings all ./remote-panel-control/Code
+
