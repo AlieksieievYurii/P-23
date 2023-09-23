@@ -1,12 +1,17 @@
+name: tank-ci
 on:
   push:
     branches:
     - main
 
 jobs:
-  my_job:
-    name: deploy to staging
+  compile_modules:
+    name: Compiles all modules
     runs-on: ubuntu-latest
     steps:
-      - name: "Test" 
-        run: echo HI
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: ls
+        run: ls
+      - name: "Install Arduino CLI" 
+        run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
