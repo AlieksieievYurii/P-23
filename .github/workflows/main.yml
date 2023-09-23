@@ -29,7 +29,7 @@ jobs:
           cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
         
       - name: Compiler platform/OSD module
-        run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
+        run: arduino-cli compile -b $OSD_TARGET_BOARD -e --warnings all ./platform/osd
 
       - name: Generate compilation database
         run: |
@@ -41,18 +41,15 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.0.2
-        with:
-           args: >
-             -X
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # - name: Compiler platform/receiver
-      #   run: arduino-cli compile -b $TANK_TARGET_BOARD -e ./platform/receiver
+      #   run: arduino-cli compile -b $TANK_TARGET_BOARD -e --warnings all ./platform/receiver
 
       # - name: Compiler remote-panel-control
-      #   run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e ./remote-panel-control/Code
+      #   run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e --warnings all ./remote-panel-control/Code
   # static_tests:
   #   name: Run Static Tests
   #   runs-on: ubuntu-latest
