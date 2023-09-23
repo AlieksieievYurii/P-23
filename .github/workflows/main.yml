@@ -18,6 +18,8 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
           arduino-cli core install arduino:avr
-          
+      - name: Install Libraries
+        run: arduino-cli config dump
+        
       - name: Compiler platform/OSD module
         run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
