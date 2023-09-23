@@ -35,6 +35,8 @@ jobs:
         run: |
           arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
           cat ./compile_commands.json
+          apt-get update && apt-get install tree -y
+          tree
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.0.2
