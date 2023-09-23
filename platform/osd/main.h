@@ -6,7 +6,7 @@
 
 //#define ARDUINO_CONSOLE
 
-MAX7456 *osd = NULL;fb
+MAX7456 *osd = NULL;
 
 const int PACKAGE_SIZE = 10;
 char package_buffer[PACKAGE_SIZE] = { 0 };
