@@ -32,7 +32,9 @@ jobs:
         run: arduino-cli compile -b $OSD_TARGET_BOARD -e ./platform/osd
 
       - name: Generate compilation database
-        run: arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
+        run: |
+          arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
+          cat ./compile_commands.json
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.0.2
