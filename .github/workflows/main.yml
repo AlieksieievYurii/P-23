@@ -7,7 +7,7 @@ on: workflow_dispatch
 env:
   OSD_TARGET_BOARD: arduino:avr:nano
   TANK_TARGET_BOARD: arduino:avr:mega
-  ARDUINO_CLI_LIBRARIES_DIR: /home/runner/Arduino
+  ARDUINO_CLI_LIBRARIES_DIR: /home/runner/Arduino/libraries
 
 jobs:
   compile_modules:
