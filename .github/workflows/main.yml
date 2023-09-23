@@ -15,4 +15,7 @@ jobs:
       - name: ls
         run: ls
       - name: "Install Arduino CLI" 
-        run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=~/local/bin sh
+      - name: test
+        run: arduino-cli --help
