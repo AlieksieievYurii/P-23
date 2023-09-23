@@ -7,6 +7,7 @@ on: workflow_dispatch
 env:
   OSD_TARGET_BOARD: arduino:avr:nano
   TANK_TARGET_BOARD: arduino:avr:mega
+  PANEL_CONTROL_TARGET_BOARD: arduino:avr:mega
   ARDUINO_CLI_LIBRARIES_DIR: /home/runner/Arduino/libraries
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
           
       - name: Install Libraries
         run: | 
-          arduino-cli lib install RadioHead PWMServo
+          arduino-cli lib install RadioHead PWMServo "Adafruit SSD1306"
           sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
           cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
         
@@ -32,3 +33,6 @@ jobs:
 
       - name: Compiler platform/receiver
         run: arduino-cli compile -b $TANK_TARGET_BOARD -e ./platform/receiver
+
+      - name: Compiler remote-panel-control
+        run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e ./remote-panel-control/Code
