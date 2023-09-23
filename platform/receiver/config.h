@@ -1,6 +1,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+//#define DEBUG
+
 //------- Transiver Config ---------
 #define CHIP_ENABLE_IN 49
 #define  CHIP_SELECT_IN 48
@@ -53,7 +55,7 @@
 
 #define BATERY_VOLTAGE_PIN A0
 
-#define STATUS_LED 13
+#define STATUS_LED_PIN 13
 
 unsigned char ENCRYPTION_KEY[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 
@@ -91,7 +93,7 @@ void init_pins() {
 
   pinMode(BATERY_VOLTAGE_PIN, INPUT);
 
-  pinMode(STATUS_LED, OUTPUT);
+  pinMode(STATUS_LED_PIN, OUTPUT);
 }
 
 #endif
