@@ -1,4 +1,6 @@
 # Tank
+[![tank-ci](https://github.com/AlieksieievYurii/Tank/actions/workflows/main.yml/badge.svg)](https://github.com/AlieksieievYurii/Tank/actions/workflows/main.yml)
+
 In this pet project, my intention was to create a good platform that can do various tasks.
 
 # Project Structure

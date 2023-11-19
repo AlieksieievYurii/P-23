@@ -1,0 +1,56 @@
+name: tank-ci
+# on: workflow_dispatch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+env:
+  OSD_TARGET_BOARD: arduino:avr:nano
+  TANK_TARGET_BOARD: arduino:avr:mega
+  PANEL_CONTROL_TARGET_BOARD: arduino:avr:mega
+  ARDUINO_CLI_LIBRARIES_DIR: /home/runner/Arduino/libraries
+
+jobs:
+  compile_modules:
+    name: Compiles all modules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: "Install Arduino CLI" 
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
+          arduino-cli core install arduino:avr
+          
+      - name: Install Libraries
+        run: | 
+          arduino-cli lib install RadioHead PWMServo "Adafruit SSD1306"
+          sed -i 's!//#define RH_ENABLE_ENCRYPTION_MODULE!#define RH_ENABLE_ENCRYPTION_MODULE!' $ARDUINO_CLI_LIBRARIES_DIR/RadioHead/RadioHead.h
+          cd $ARDUINO_CLI_LIBRARIES_DIR && git clone https://github.com/kostko/arduino-crypto.git
+        
+      - name: Compiler platform/OSD module
+        run: arduino-cli compile -b $OSD_TARGET_BOARD -e --warnings all ./platform/osd
+
+      # - name: Generate compilation database
+      #   run: |
+      #     arduino-cli compile -b $OSD_TARGET_BOARD --only-compilation-database --build-path ./ ./platform/osd
+      #     cat ./compile_commands.json
+      #     apt-get update && apt-get install tree -y
+      #     cd /home/runner/work
+      #     tree
+
+      # - name: SonarCloud Scan
+      #   uses: SonarSource/sonarcloud-github-action@v2.0.2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.TOKEN_FOR_GITHUB }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Compiler platform/receiver
+        run: arduino-cli compile -b $TANK_TARGET_BOARD -e --warnings all ./platform/receiver
+
+      - name: Compiler remote-panel-control
+        run: arduino-cli compile -b $PANEL_CONTROL_TARGET_BOARD -e --warnings all ./remote-panel-control/Code
+
