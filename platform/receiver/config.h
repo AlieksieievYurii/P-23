@@ -16,8 +16,8 @@
 #define RIGHT_MOTOR_DRIVE_L_IS 25
 #define RIGHT_MOTOR_DRIVE_R_EN 22
 #define RIGHT_MOTOR_DRIVE_L_EN 23
-#define RIGHT_MOTOR_DRIVE_RPWM 10
-#define RIGHT_MOTOR_DRIVE_LPWM 9
+#define RIGHT_MOTOR_DRIVE_RPWM 9
+#define RIGHT_MOTOR_DRIVE_LPWM 10
 //-----------------------------------
 
 //-------- Left Motor Driver --------
