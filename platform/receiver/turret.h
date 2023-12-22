@@ -67,7 +67,13 @@ public:
   }
 
   void set_comander_camera_horizontal_position(uint8_t value) {
-
+    if (value >= 0 && value <= 120) {
+      _horizontal_position = map(value, 120, 0, 0x0, 0x7F);
+    } else if (value >= 130 && value <= 255) {
+      _horizontal_position = map(value, 130, 255, 0x80, 0xFE);
+    } else {
+      _horizontal_position = 0;
+    }
   }
 
   void set_battle_mode(uint8_t value) {
@@ -99,7 +105,7 @@ public:
       data[2] = 0;
     }
 
-    data[3] = 0;
+    data[3] = _comander_camera_horizontal_position;
     data[4] = _comander_camera_vertical_position;
     data[5] = get_check_sum(data);
     _serial_stream->write(data, MESSAGE_SIZE + 2);
