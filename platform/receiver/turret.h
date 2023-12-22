@@ -104,9 +104,15 @@ public:
       data[1] = 0;
       data[2] = 0;
     }
+    
+    if (comander_camera_selected) {
+      data[3] = _comander_camera_horizontal_position;
+      data[4] = _comander_camera_vertical_position;
+    } else {
+      data[3] = 0;
+      data[4] = 0;
+    }
 
-    data[3] = _comander_camera_horizontal_position;
-    data[4] = _comander_camera_vertical_position;
     data[5] = get_check_sum(data);
     _serial_stream->write(data, MESSAGE_SIZE + 2);
   }
