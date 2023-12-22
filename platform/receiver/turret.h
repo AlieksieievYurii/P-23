@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define MESSAGE_SIZE 4
+#define MESSAGE_SIZE 5
 
 enum class BattleMode {
   SAFE,
@@ -22,6 +22,7 @@ class Turret {
 public:
   bool gun_camera_selected = false;
   bool comander_camera_selected = false;
+  bool comander_camera_bind_mode = false;
 
   Turret(HardwareSerial& serial_stream) {
     _serial_stream = &serial_stream;
@@ -57,10 +58,15 @@ public:
   }
 
   void set_comander_camera_vertical_position(uint8_t value) {
+    if (comander_camera_bind_mode) {
+      _comander_camera_vertical_position = value;
+      return;
+    }
+
     if (value >= 0 && value <= 120) {
-      _comander_camera_vertical_position = map(value, 120, 0, 0x0, 0x7F);
+      _comander_camera_vertical_position = map(value, 120, 0, 0x80, 0xFE);
     } else if (value >= 130 && value <= 255) {
-      _comander_camera_vertical_position = map(value, 130, 255, 0x80, 0xFE);
+      _comander_camera_vertical_position = map(value, 130, 255, 0x0, 0x7F);
     } else {
       _comander_camera_vertical_position = 0;
     }
@@ -68,11 +74,11 @@ public:
 
   void set_comander_camera_horizontal_position(uint8_t value) {
     if (value >= 0 && value <= 120) {
-      _horizontal_position = map(value, 120, 0, 0x0, 0x7F);
+      _comander_camera_horizontal_position = map(value, 120, 0, 0x0, 0x7F);
     } else if (value >= 130 && value <= 255) {
-      _horizontal_position = map(value, 130, 255, 0x80, 0xFE);
+      _comander_camera_horizontal_position = map(value, 130, 255, 0x80, 0xFE);
     } else {
-      _horizontal_position = 0;
+      _comander_camera_horizontal_position = 0;
     }
   }
 
@@ -92,6 +98,8 @@ public:
 
   void tick() {
     uint8_t data[MESSAGE_SIZE + 2] = { 0 };
+    uint8_t control_data = 0;
+    
     data[0] = 0xFF;
 
     if (_battle_mode == BattleMode::STATIC && gun_camera_selected) {
@@ -104,16 +112,19 @@ public:
       data[1] = 0;
       data[2] = 0;
     }
-    
+
     if (comander_camera_selected) {
       data[3] = _comander_camera_horizontal_position;
       data[4] = _comander_camera_vertical_position;
+      control_data |= comander_camera_bind_mode << 0;
     } else {
       data[3] = 0;
       data[4] = 0;
+      control_data |= 0; // Disable bind mode to prevent setting angle as 0. I know... bullshit
     }
-
-    data[5] = get_check_sum(data);
+    
+    data[5] = control_data;
+    data[6] = get_check_sum(data);
     _serial_stream->write(data, MESSAGE_SIZE + 2);
   }
 

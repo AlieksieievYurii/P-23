@@ -14,7 +14,7 @@ CommanderServo commander_camera_horizontal_control(commander_camera_horizontal_s
 CommanderServo commander_camera_vertical_control(commander_camera_vertical_servo);
 Module module;
 
-#define MESSAGE_SIZE 4  // Note it does not include Start-of-Frame delimiter and check-sum
+#define MESSAGE_SIZE 5  // Note it does not include Start-of-Frame delimiter and check-sum
 
 ISR(TIMER2_A) {
   turret_horizontal_rotation.interupt_call();
@@ -37,7 +37,7 @@ const uint8_t get_check_sum(const uint8_t* data) {
 
 bool read_serial_message(uint8_t* data) {
   if (Serial.available() == 0)
-      return false;
+    return false;
 
   uint32_t last_update_time = millis();
   uint8_t index = 1;
@@ -51,12 +51,12 @@ bool read_serial_message(uint8_t* data) {
       continue;
 
     uint8_t incoming_byte = Serial.read();
-    
+
     if (start) {
-      
+
       data[index++] = incoming_byte;
       if (index == MESSAGE_SIZE + 2) {
-        
+
         // Check the checksum which is the latest item
         if (data[MESSAGE_SIZE + 1] == get_check_sum(data)) {
           return true;
@@ -81,11 +81,20 @@ void loop() {
   if (read_serial_message(incoming_data)) {
     turret_horizontal_rotation.write(incoming_data[1]);
     gun_vertical_positioning_servo_control.write(incoming_data[2]);
-    
-    commander_camera_horizontal_control.write(incoming_data[3]);
-    commander_camera_vertical_control.write(incoming_data[4]);
+
+    bool comander_camera_bind_mode = incoming_data[5] & 0x1;
+
+    if (comander_camera_bind_mode)
+      commander_camera_horizontal_control.set(incoming_data[3]);
+    else
+      commander_camera_horizontal_control.write(incoming_data[3]);
+
+    if (comander_camera_bind_mode)
+      commander_camera_vertical_control.set(incoming_data[4]);
+    else
+      commander_camera_vertical_control.write(incoming_data[4]);
   }
- 
+
   gun_vertical_positioning_servo_control.tick();
   turret_horizontal_rotation.tick();
   commander_camera_horizontal_control.tick();

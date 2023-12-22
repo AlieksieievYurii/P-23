@@ -48,6 +48,7 @@ public:
   }
 
   void write(uint8_t value) {
+    _static_position = false;
     if (value >= 0x01 && value <= 0x7F) {
       _speed = map(value, 0x01, 0x7F, 200, 10);
       _step = 1;
@@ -60,8 +61,14 @@ public:
     }
   }
 
+  void set(uint8_t value) {
+    _static_position = true;
+    _angle = map(value, 0x00, 0xFF, 0, 180);
+    _servo->write(_angle);
+  }
+
   void tick() {
-    if (millis() - _time_buffer >= _speed) {
+    if (_static_position == false && millis() - _time_buffer >= _speed) {
       _angle = MAX(MIN(_angle + _step, 0), 180);
       _servo->write(_angle);
       _time_buffer = millis();
@@ -74,6 +81,7 @@ private:
   int8_t _step = 0;
   int16_t _angle = 90;
   uint32_t _time_buffer = 0;
+  bool _static_position = false;
 };
 
 #endif

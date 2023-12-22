@@ -32,9 +32,11 @@ void handle_p_23_turret(const uint8_t* const data) {
   const uint8_t control_data = data[0xE];
   const uint8_t camera_joy_x = data[0x6];
   const uint8_t camera_joy_y = data[0x7];
+  bool camera_mode_bind = data[0xE] & 0x2;
 
   turret.gun_camera_selected = current_selected_camera == GUN_CAMERA_ID;
   turret.comander_camera_selected = current_selected_camera == TURRET_CAMERA_ID;
+  turret.comander_camera_bind_mode = camera_mode_bind;
 
   turret.set_horizontal_position(turret_joy_x);
   turret.set_vertical_position(turret_joy_y);
@@ -140,8 +142,8 @@ void loop() {
   driving.enable_motors(true);
   handle_commutication();
   // if (Serial2.available() > 0) {
-  //   Serial.println("LOL");
-  //   //Serial.println((uint8_t) Serial2.parseInt());
+    
+  //   Serial.println((uint8_t) Serial2.parseInt());
   // }
   
   lights.tick();
