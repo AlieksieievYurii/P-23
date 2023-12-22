@@ -19,6 +19,8 @@ Osd osd(Serial3);
 #define A_CAMERA_ID 0x4
 #define R_CAMERA_ID 0x5
 
+volatile uint8_t current_selected_camera = FRONT_CAMERA_ID;
+
 void handle_front_camera_control(uint8_t con_value, bool camera_mode_bind, uint8_t speed_camera_movement) {
   static uint8_t val;
 
@@ -35,7 +37,6 @@ void handle_front_camera_control(uint8_t con_value, bool camera_mode_bind, uint8
 }
 
 uint8_t handle_camera_selection(uint8_t value) {
-  static uint8_t current_selected_camera = 0x0;
   static uint32_t time = 0;
   static bool is_camera_set = false;
   uint8_t selected_camera = value & 0x7;
@@ -51,6 +52,7 @@ uint8_t handle_camera_selection(uint8_t value) {
     digitalWrite(BACK_CAMERA_SWITCH_PIN, selected_camera == BACK_CAMERA_ID);
     digitalWrite(TURRET_CAMERA_SWITCH_PIN, selected_camera == TURRET_CAMERA_ID);
     digitalWrite(GUN_CAMERA_SWITCH_PIN, selected_camera == GUN_CAMERA_ID);
+
     digitalWrite(A_CAMERA_SWITCH_PIN, selected_camera == A_CAMERA_ID);
     digitalWrite(R_CAMERA_SWITCH_PIN, selected_camera == R_CAMERA_ID);
     is_camera_set = true;

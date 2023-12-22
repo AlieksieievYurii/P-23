@@ -24,6 +24,18 @@ uint8_t get_control_data() {
   uint8_t value = 0;
   value |= IS_SWITCH_ON(DRIVING_MODE_SWITCH);
   value |= camera_bind_mode << 1;
+
+  uint8_t battle_mode = 0;
+  uint16_t battle_mode_analog_value = analogRead(BATTLE_MODE_DOUBLE_SWITCH);
+  if (battle_mode_analog_value <= 341)
+    battle_mode = 0; // Battle mode C
+  else if (battle_mode_analog_value > 342 && battle_mode_analog_value <= 684)
+    battle_mode = 1; // Battle mode A
+  else if (battle_mode_analog_value >= 685)
+    battle_mode = 2; // Battle mode B
+  
+  value |= battle_mode << 2;
+
   return value;
 }
 

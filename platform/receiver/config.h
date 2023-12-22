@@ -16,8 +16,8 @@
 #define RIGHT_MOTOR_DRIVE_L_IS 25
 #define RIGHT_MOTOR_DRIVE_R_EN 22
 #define RIGHT_MOTOR_DRIVE_L_EN 23
-#define RIGHT_MOTOR_DRIVE_RPWM 10
-#define RIGHT_MOTOR_DRIVE_LPWM 9
+#define RIGHT_MOTOR_DRIVE_RPWM 9
+#define RIGHT_MOTOR_DRIVE_LPWM 10
 //-----------------------------------
 
 //-------- Left Motor Driver --------
@@ -56,6 +56,8 @@
 #define BATERY_VOLTAGE_PIN A0
 
 #define STATUS_LED_PIN 13
+
+#define TURRET_P_23_ENABLE
 
 unsigned char ENCRYPTION_KEY[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 
