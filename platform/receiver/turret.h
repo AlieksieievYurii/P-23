@@ -81,7 +81,7 @@ public:
     if (value >= 0 && value <= 120) {
       _comander_camera_horizontal_position = map(value, 120, 0, 0x0, map(speed, 0, 255, 0x80, 0xFE));
     } else if (value >= 130 && value <= 255) {
-      _comander_camera_horizontal_position = map(value, 130, 255, 0x80, map(speed, 0, 255, 0x80, 0xFE));
+      _comander_camera_horizontal_position = map(value, 130, 255, 0x80, map(speed, 0, 255, 0x0, 0x7F ));
     } else {
       _comander_camera_horizontal_position = 0;
     }
