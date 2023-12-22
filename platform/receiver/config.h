@@ -47,8 +47,8 @@
 //----- Camera output switches ----------
 #define FRONT_CAMERA_SWITCH_PIN 28
 #define BACK_CAMERA_SWITCH_PIN 27
-#define TURRET_CAMERA_SWITCH_PIN 26
-#define GUN_CAMERA_SWITCH_PIN 41
+#define TURRET_CAMERA_SWITCH_PIN 41
+#define GUN_CAMERA_SWITCH_PIN 26
 #define A_CAMERA_SWITCH_PIN 40
 #define R_CAMERA_SWITCH_PIN 39
 //---------------------------------------
