@@ -21,6 +21,7 @@ const uint8_t get_check_sum(const uint8_t* data) {
 class Turret {
 public:
   bool gun_camera_selected = false;
+  bool comander_camera_selected = false;
 
   Turret(HardwareSerial& serial_stream) {
     _serial_stream = &serial_stream;
@@ -55,6 +56,19 @@ public:
     }
   }
 
+  void set_comander_camera_vertical_position(uint8_t value) {
+    if (value >= 0 && value <= 120) {
+      _comander_camera_vertical_position = map(value, 120, 0, 0x0, 0x7F);
+    } else if (value >= 130 && value <= 255) {
+      _comander_camera_vertical_position = map(value, 130, 255, 0x80, 0xFE);
+    } else {
+      _comander_camera_vertical_position = 0;
+    }
+  }
+
+  void set_comander_camera_horizontal_position(uint8_t value) {
+
+  }
 
   void set_battle_mode(uint8_t value) {
     switch ((value >> 2) & 3) {
@@ -86,7 +100,7 @@ public:
     }
 
     data[3] = 0;
-    data[4] = 0;
+    data[4] = _comander_camera_vertical_position;
     data[5] = get_check_sum(data);
     _serial_stream->write(data, MESSAGE_SIZE + 2);
   }
@@ -94,8 +108,10 @@ public:
 private:
   BattleMode _battle_mode = BattleMode::SAFE;
   HardwareSerial* _serial_stream;
-  uint8_t _horizontal_position = 0;
-  uint8_t _vertical_position = 0;
+  volatile uint8_t _horizontal_position = 0;
+  volatile uint8_t _vertical_position = 0;
+  volatile uint8_t _comander_camera_vertical_position = 0;
+  volatile uint8_t _comander_camera_horizontal_position = 0;
 };
 
 #endif

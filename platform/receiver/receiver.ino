@@ -26,16 +26,21 @@ Turret turret(Serial2);
 
 volatile float buf[10] = { 0 };
 
-void handle_p_23_turret(uint8_t* data) {
-  uint8_t turret_joy_x = data[0x3];
-  uint8_t turret_joy_y = data[0x4];
-  uint8_t control_data = data[0xE];
+void handle_p_23_turret(const uint8_t* const data) {
+  const uint8_t turret_joy_x = data[0x3];
+  const uint8_t turret_joy_y = data[0x4];
+  const uint8_t control_data = data[0xE];
+  const uint8_t camera_joy_x = data[0x6];
+  const uint8_t camera_joy_y = data[0x7];
 
   turret.gun_camera_selected = current_selected_camera == GUN_CAMERA_ID;
+  turret.comander_camera_selected = current_selected_camera == TURRET_CAMERA_ID;
 
   turret.set_horizontal_position(turret_joy_x);
   turret.set_vertical_position(turret_joy_y);
   turret.set_battle_mode(control_data);
+  turret.set_comander_camera_vertical_position(camera_joy_y);
+  turret.set_comander_camera_horizontal_position(camera_joy_x);
 }
 
 void handle_package(uint8_t* data) {

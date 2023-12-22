@@ -13,7 +13,6 @@ public:
   }
 
   void write(uint8_t value) {
-    
     if (value >= 0x01 && value <= 0x7F) {
       _speed = map(value, 0x01, 0x7F, 200, 10);
       _step = 1;
@@ -50,10 +49,10 @@ public:
 
   void write(uint8_t value) {
     if (value >= 0x01 && value <= 0x7F) {
-      _speed = map(value, 0x01, 0x7F, 300, 10);
+      _speed = map(value, 0x01, 0x7F, 200, 10);
       _step = 1;
     } else if (value >= 0x80 && value <= 0xFE) {
-      _speed = map(value, 0x80, 0xFE, 300, 10);
+      _speed = map(value, 0x80, 0xFE, 200, 10);
       _step = -1;
     } else {
       _step = 0;
