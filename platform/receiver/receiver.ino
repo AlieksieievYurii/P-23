@@ -35,13 +35,14 @@ void handle_p_23_turret(const uint8_t* const data) {
   bool camera_mode_bind = data[0xE] & 0x2;
 
   uint8_t camera_movement_speed = data[0xB];
+  uint8_t turret_movement_speed = data[0x9];
 
   turret.gun_camera_selected = current_selected_camera == GUN_CAMERA_ID;
   turret.comander_camera_selected = current_selected_camera == TURRET_CAMERA_ID;
   turret.comander_camera_bind_mode = camera_mode_bind;
 
-  turret.set_horizontal_position(turret_joy_x);
-  turret.set_vertical_position(turret_joy_y);
+  turret.set_horizontal_position(turret_joy_x, turret_movement_speed);
+  turret.set_vertical_position(turret_joy_y, turret_movement_speed);
   turret.set_battle_mode(control_data);
   turret.set_comander_camera_vertical_position(camera_joy_y, camera_movement_speed);
   turret.set_comander_camera_horizontal_position(camera_joy_x, camera_movement_speed);

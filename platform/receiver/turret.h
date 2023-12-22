@@ -33,11 +33,11 @@ public:
   * If the value is from 1..127 -> the turret turns left
   * If the value is from 128..255 -> the turret turns right
   */
-  void set_horizontal_position(uint8_t value) {
+  void set_horizontal_position(uint8_t value, uint8_t speed) {
     if (value >= 0 && value <= 120) {
-      _horizontal_position = map(value, 120, 0, 0x0, 0x7F);
+      _horizontal_position = map(value, 120, 0, 0x0, map(speed, 0, 255, 0x0, 0x7F));
     } else if (value >= 135 && value <= 255) {
-      _horizontal_position = map(value, 135, 255, 0x80, 0xFE);
+      _horizontal_position = map(value, 135, 255, 0x80, map(speed, 0, 255, 0x80, 0xFE));
     } else {
       _horizontal_position = 0;
     }
@@ -47,11 +47,11 @@ public:
   * If the value is from 1..127 -> the gun goes down.
   * If the value is from 128..255 -> the gun goes up
   */
-  void set_vertical_position(uint8_t value) {
+  void set_vertical_position(uint8_t value, uint8_t speed) {
     if (value >= 0 && value <= 120) {
-      _vertical_position = map(value, 120, 0, 0x0, 0x7F);
+      _vertical_position = map(value, 120, 0, 0x0, map(speed, 0, 255, 0x0, 0x7F));
     } else if (value >= 135 && value <= 255) {
-      _vertical_position = map(value, 135, 255, 0x80, 0xFE);
+      _vertical_position = map(value, 135, 255, 0x80, map(speed, 0, 255, 0x80, 0xFE));
     } else {
       _vertical_position = 0;
     }
