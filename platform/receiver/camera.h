@@ -23,15 +23,16 @@ volatile uint8_t current_selected_camera = FRONT_CAMERA_ID;
 
 void handle_front_camera_control(uint8_t con_value, bool camera_mode_bind, uint8_t speed_camera_movement) {
   static uint8_t val;
-
-  if (camera_mode_bind) {
-    val = map(con_value, 0, 255, 0, 179);
-  } else {
-    uint8_t k = map(speed_camera_movement, 0, 255, 0, 10);
-    if (con_value <= 120)
-      val = MIN(1, val - k);
-    else if (con_value >= 136)
-      val = MAX(179, val + k);
+  if (current_selected_camera == FRONT_CAMERA_ID) {
+    if (camera_mode_bind) {
+      val = map(con_value, 0, 255, 0, 179);
+    } else {
+      uint8_t k = map(speed_camera_movement, 0, 255, 0, 10);
+      if (con_value <= 120)
+        val = MIN(1, val - k);
+      else if (con_value >= 136)
+        val = MAX(179, val + k);
+    }
   }
   front_camera_servo.write(val);
 }

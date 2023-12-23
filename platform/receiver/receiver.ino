@@ -26,16 +26,26 @@ Turret turret(Serial2);
 
 volatile float buf[10] = { 0 };
 
-void handle_p_23_turret(uint8_t* data) {
-  uint8_t turret_joy_x = data[0x3];
-  uint8_t turret_joy_y = data[0x4];
-  uint8_t control_data = data[0xE];
+void handle_p_23_turret(const uint8_t* const data) {
+  const uint8_t turret_joy_x = data[0x3];
+  const uint8_t turret_joy_y = data[0x4];
+  const uint8_t control_data = data[0xE];
+  const uint8_t camera_joy_x = data[0x6];
+  const uint8_t camera_joy_y = data[0x7];
+  bool camera_mode_bind = data[0xE] & 0x2;
+
+  uint8_t camera_movement_speed = data[0xB];
+  uint8_t turret_movement_speed = data[0x9];
 
   turret.gun_camera_selected = current_selected_camera == GUN_CAMERA_ID;
+  turret.comander_camera_selected = current_selected_camera == TURRET_CAMERA_ID;
+  turret.comander_camera_bind_mode = camera_mode_bind;
 
-  turret.set_horizontal_position(turret_joy_x);
-  turret.set_vertical_position(turret_joy_y);
+  turret.set_horizontal_position(turret_joy_x, turret_movement_speed);
+  turret.set_vertical_position(turret_joy_y, turret_movement_speed);
   turret.set_battle_mode(control_data);
+  turret.set_comander_camera_vertical_position(camera_joy_y, camera_movement_speed);
+  turret.set_comander_camera_horizontal_position(camera_joy_x, camera_movement_speed);
 }
 
 void handle_package(uint8_t* data) {
@@ -135,8 +145,8 @@ void loop() {
   driving.enable_motors(true);
   handle_commutication();
   // if (Serial2.available() > 0) {
-  //   Serial.println("LOL");
-  //   //Serial.println((uint8_t) Serial2.parseInt());
+    
+  //   Serial.println((uint8_t) Serial2.parseInt());
   // }
   
   lights.tick();
