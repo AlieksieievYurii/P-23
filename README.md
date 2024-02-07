@@ -1,11 +1,12 @@
 # Tank P-23
-[![tank-ci](https://github.com/AlieksieievYurii/Tank/actions/workflows/main.yml/badge.svg)](https://github.com/AlieksieievYurii/Tank/actions/workflows/main.yml)
+[![p-23-ci](https://github.com/AlieksieievYurii/Tank/actions/workflows/main.yml/badge.svg)](https://github.com/AlieksieievYurii/Tank/actions/workflows/main.yml)
 
 When I was a child, I always wanted to build a tank :D However, I didn't have the required skills for that. When I grew up,
 I remembered that "childhood dream" and decided to try to build a tank. The main idea is to create a fully functional military RC
 tank that can shoot and has a loading mechanism.
 
 Features:
+- Arduino Based Project (2x Mega, 3x Pro Mini)
 - 4 cameras: front, back, commander, gunner
 - Lights: back(Red), front, long front, gun, turret
 - Laser
@@ -17,9 +18,9 @@ Features:
 - Radio control using nrf24l01
 - Special Panel Control
 
-![Tank Platform jhf](https://github.com/AlieksieievYurii/P-23/assets/39415360/aa100399-352b-4e76-bb74-02f8acf59fc8)
-![urf](https://github.com/AlieksieievYurii/P-23/assets/39415360/e697cb0c-ef1e-459d-8845-2fcfade69cf9)
-![Tank Platform v142](https://github.com/AlieksieievYurii/P-23/assets/39415360/0c03724d-af4b-43fe-aa4b-5b64b1bab898)
+![Tank Platform 1](https://github.com/AlieksieievYurii/P-23/assets/39415360/aa100399-352b-4e76-bb74-02f8acf59fc8)
+![Tank Platform 2](https://github.com/AlieksieievYurii/P-23/assets/39415360/e697cb0c-ef1e-459d-8845-2fcfade69cf9)
+![Tank Platform 3](https://github.com/AlieksieievYurii/P-23/assets/39415360/0c03724d-af4b-43fe-aa4b-5b64b1bab898)
 
 
 # Modules Architecture Overview
