@@ -41,8 +41,6 @@ public:
       digitalWrite(RIGHT_LONG_LIGHT_PIN, long_light);
     }
 
-    // TODO Implement Turret lights
-
     if (millis() - _last_update > BLICK_FREQ) {
 
       if (back_light_mode == LIGHT_MODE_BLINK) {

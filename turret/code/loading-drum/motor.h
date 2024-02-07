@@ -60,9 +60,13 @@
 
 #define ENABLE_LOADING_DRUM_MOVER_TIMEOUT
 #define ENABLE_GATE_TIMEOUT
+#define ENABLE_FEEDER_TIMEOUT
+#define ENABLE_DRUM_ROTATION_TIMEOUT
 
-#define LOADING_DRUM_MOVER_TIMEOUT 8000
+#define LOADING_DRUM_MOVER_TIMEOUT 11000
 #define GATE_TIMEOUT 1000
+#define FEEDER_TIMEOUT 3000
+#define DRUM_ROTATION_TIMEOUT 1000
 
 enum class State {
   STOP,
@@ -82,34 +86,66 @@ enum class FeederState {
   STOP
 };
 
+enum class Status {
+  DOING,
+  FINISHED,
+  FAILED
+};
+
+// Error codes
+#define MOTOR_ERROR_GATE_OPENING_TIMEOUT 0x2
+#define MOTOR_ERROR_GATE_CLOSING_TIMEOUT 0x3
+
+#define MOTOR_ERROR_LOADING_DRUM_ACTIVATION_TIMEOUT 0x4
+#define MOTOR_ERROR_LOADING_DRUM_DEACTIVATION_TIMEOUT 0x5
+
+#define MOTOR_ERROR_FEEDER_PUSH_TIMEOUT 0x6
+#define MOTOR_ERROR_FEEDER_PULL_TIMEOUT 0x7
+
+
 class Gate {
 public:
   void open() {
     _state = State::OPEN;
-    _failed = false;
+    _status = Status::DOING;
+    _error_code = 0;
     _timestamp = millis();
   }
 
   void close() {
     _state = State::CLOSE;
-    _failed = false;
+    _status = Status::DOING;
+    _error_code = 0;
     _timestamp = millis();
   }
 
+  Status get_status(void) {
+    return _status;
+  }
+
+  uint8_t get_error_code(void) {
+    if (_status != Status::FAILED)
+      return 0;
+    else
+      return _error_code;
+  }
+
   void tick() {
-    if (_failed) {
+    if (_status == Status::FAILED) {
       _state = State::STOP;
     }
 
     switch (_state) {
-
       case State::OPEN:
         if (GATE_OPENED_TRIGGERED) {
           _state = State::STOP;
+          _status = Status::FINISHED;
         } else {
 #ifdef ENABLE_GATE_TIMEOUT
-          if (millis() - _timestamp > GATE_TIMEOUT)
-            _failed = true;
+          if (millis() - _timestamp > GATE_TIMEOUT) {
+            _status = Status::FAILED;
+            _error_code = MOTOR_ERROR_GATE_OPENING_TIMEOUT;
+          }
 #endif
           OPEN_GATE;
         }
@@ -118,10 +154,13 @@ public:
       case State::CLOSE:
         if (GATE_CLOSED_TRIGGERED) {
           _state = State::STOP;
+          _status = Status::FINISHED;
         } else {
 #ifdef ENABLE_GATE_TIMEOUT
-          if (millis() - _timestamp > GATE_TIMEOUT)
-            _failed = true;
+          if (millis() - _timestamp > GATE_TIMEOUT) {
+            _status = Status::FAILED;
+            _error_code = MOTOR_ERROR_GATE_CLOSING_TIMEOUT;
+          }
 #endif
           CLOSE_GATE;
         }
@@ -135,26 +174,40 @@ public:
 
 private:
   State _state = State::STOP;
-  bool _failed = false;
+  Status _status = Status::FINISHED;
   uint32_t _timestamp = 0;
+  uint8_t _error_code = 0;
 };
 
 class LoadingDrumMover {
 public:
   void activate() {
     _state = State::OPEN;
-    _failed = false;
+    _status = Status::DOING;
+    _error_code = 0;
     _timestamp = millis();
   }
 
   void deactivate() {
     _state = State::CLOSE;
-    _failed = false;
+    _status = Status::DOING;
+    _error_code = 0;
     _timestamp = millis();
   }
 
+  Status get_status() {
+    return _status;
+  }
+
+  uint8_t get_error_code(void) {
+    if (_status != Status::FAILED)
+      return 0;
+    else
+      return _error_code;
+  }
+
   void tick(void) {
-    if (_failed) {
+    if (_status == Status::FAILED) {
       _state = State::STOP;
     }
 
@@ -163,14 +216,17 @@ public:
         if (digitalRead(LOADING_DRUM_MOVER_MOTOR_FRONT_END_PIN)) {
 
 #ifdef ENABLE_LOADING_DRUM_MOVER_TIMEOUT
-          if (millis() - _timestamp > LOADING_DRUM_MOVER_TIMEOUT)
-            _failed = true;
+          if (millis() - _timestamp > LOADING_DRUM_MOVER_TIMEOUT) {
+            _status = Status::FAILED;
+            _error_code = MOTOR_ERROR_LOADING_DRUM_ACTIVATION_TIMEOUT;
+          }
 #endif
 
           MOVE_LOADING_DRUM_FORWARD;
 
         } else {
           _state = State::STOP;
+          _status = Status::FINISHED;
         }
         break;
 
@@ -178,14 +234,17 @@ public:
         if (digitalRead(LOADING_DRUM_MOVER_MOTOR_BACK_END_PIN)) {
 
 #ifdef ENABLE_LOADING_DRUM_MOVER_TIMEOUT
-          if (millis() - _timestamp > LOADING_DRUM_MOVER_TIMEOUT)
-            _failed = true;
+          if (millis() - _timestamp > LOADING_DRUM_MOVER_TIMEOUT) {
+            _status = Status::FAILED;
+            _error_code = MOTOR_ERROR_LOADING_DRUM_DEACTIVATION_TIMEOUT;
+          }
 #endif
 
           MOVE_LOADING_DRUM_BACKWARD;
 
         } else {
           _state = State::STOP;
+          _status = Status::FINISHED;
         }
         break;
 
@@ -197,22 +256,36 @@ public:
 
 private:
   State _state = State::STOP;
-  bool _failed = false;
+  Status _status = Status::FINISHED;
   uint32_t _timestamp = 0;
+  uint8_t _error_code = 0;
 };
 
 class DrumRotation {
 public:
   void next() {
     _rotation_state = RotationState::NEXT;
-    ROTATE_CLOCKWISE_DRUM;
+    _status = Status::DOING;
+    _error_code = 0;
     _timestamp = millis();
   }
 
   void previous() {
     _rotation_state = RotationState::PREVIOUS;
-    ROTATE_COUNTER_CLOCKWISE_DRUM;
+    _status = Status::DOING;
+    _error_code = 0;
     _timestamp = millis();
+  }
+
+  Status get_status(void) {
+    return _status;
+  }
+
+  uint8_t get_error_code(void) {
+    if (_status != Status::FAILED)
+      return 0;
+    else
+      return _error_code;
   }
 
   void tick(void) {
@@ -220,16 +293,36 @@ public:
 
       case RotationState::NEXT:
         ROTATE_CLOCKWISE_DRUM;
+#ifdef ENABLE_DRUM_ROTATION_TIMEOUT
+        if (millis() - _timestamp >= DRUM_ROTATION_TIMEOUT) {
+          STOP_ROTATION;
+          _rotation_state = RotationState::STOP;
+          _status = Status::FAILED;
+          _error_code = ERROR_DRUM_CLOCKWISE_ROTATION_TIMEOUT;
+          return;
+        }
+#endif
         if (millis() - _timestamp > 100 && ROTATION_CHECKPOINT_TRIGGERED) {
           STOP_ROTATION;
+          _status = Status::FINISHED;
           _rotation_state = RotationState::STOP;
         }
         break;
 
       case RotationState::PREVIOUS:
         ROTATE_COUNTER_CLOCKWISE_DRUM;
+#ifdef ENABLE_DRUM_ROTATION_TIMEOUT
+        if (millis() - _timestamp >= DRUM_ROTATION_TIMEOUT) {
+          STOP_ROTATION;
+          _rotation_state = RotationState::STOP;
+          _status = Status::FAILED;
+          _error_code = ERROR_DRUM_COUNTER_CLOCKWISE_ROTATION_TIMEOUT;
+          return;
+        }
+#endif
         if (millis() - _timestamp > 100 && ROTATION_CHECKPOINT_TRIGGERED) {
           STOP_ROTATION;
+          _status = Status::FINISHED;
           _rotation_state = RotationState::STOP;
         }
         break;
@@ -237,34 +330,16 @@ public:
   }
 private:
   RotationState _rotation_state = RotationState::STOP;
+  Status _status = Status::FINISHED;
   uint32_t _timestamp = 0;
+  uint8_t _error_code = 0;
 };
 
 class Feeder {
 public:
-  void tick(void) {
-    switch (_state) {
-
-      case FeederState::PUSH:
-        PUSH_FEEDER;
-        if (FEEDER_PUSHED_POSITION_TRIGGERED) {
-          STOP_FEEDER;
-          _state = FeederState::STOP;
-        }
-        break;
-
-      case FeederState::PULL:
-        PULL_FEEDER;
-        if (millis() - _timestamp > 700 && FEEDER_PULLED_POSITION_TRIGGERED) {
-          STOP_FEEDER;
-          _state = FeederState::STOP;
-        }
-        break;
-    }
-  }
-
   void push() {
     _state = FeederState::PUSH;
+    _timestamp = millis();
   }
 
   void pull() {
@@ -272,9 +347,65 @@ public:
     _timestamp = millis();
   }
 
+  Status get_status(void) {
+    return _status;
+  }
+
+  uint8_t get_error_code(void) {
+    if (_status != Status::FAILED)
+      return 0;
+    else
+      return _error_code;
+  }
+
+  void tick(void) {
+    switch (_state) {
+
+      case FeederState::PUSH:
+        _status = Status::DOING;
+        PUSH_FEEDER;
+#ifdef ENABLE_FEEDER_TIMEOUT
+        if (millis() - _timestamp >= FEEDER_TIMEOUT) {
+          _status = Status::FAILED;
+          _error_code = MOTOR_ERROR_FEEDER_PUSH_TIMEOUT;
+          _state = FeederState::STOP;
+          return;
+        }
+#endif
+        if (FEEDER_PUSHED_POSITION_TRIGGERED) {
+          _status = Status::FINISHED;
+          _state = FeederState::STOP;
+        }
+        break;
+
+      case FeederState::PULL:
+        _status = Status::DOING;
+        PULL_FEEDER;
+#ifdef ENABLE_FEEDER_TIMEOUT
+        if (millis() - _timestamp >= FEEDER_TIMEOUT) {
+          _status = Status::FAILED;
+          _error_code = MOTOR_ERROR_FEEDER_PULL_TIMEOUT;
+          _state = FeederState::STOP;
+          return;
+        }
+#endif
+        if (millis() - _timestamp > 700 && FEEDER_PULLED_POSITION_TRIGGERED) {
+          _status = Status::FINISHED;
+          _state = FeederState::STOP;
+        }
+        break;
+
+      case FeederState::STOP:
+        STOP_FEEDER;
+        break;
+    }
+  }
+
 private:
   FeederState _state = FeederState::STOP;
+  Status _status = Status::FINISHED;
   uint32_t _timestamp = 0;
+  uint8_t _error_code = 0;
 };
 
 #endif

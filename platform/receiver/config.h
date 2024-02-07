@@ -59,6 +59,9 @@
 
 #define TURRET_P_23_ENABLE
 
+#define TASK_LOAD 0x02
+#define TASK_UNLOAD 0x03
+
 unsigned char ENCRYPTION_KEY[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 
 void init_pins() {

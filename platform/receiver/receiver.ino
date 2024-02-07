@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "battery.h"
 #include "turret.h"
+#include "command_engine.h"
 
 
 RH_NRF24 nrf24(CHIP_ENABLE_IN, CHIP_SELECT_IN);
@@ -46,6 +47,9 @@ void handle_p_23_turret(const uint8_t* const data) {
   turret.set_battle_mode(control_data);
   turret.set_comander_camera_vertical_position(camera_joy_y, camera_movement_speed);
   turret.set_comander_camera_horizontal_position(camera_joy_x, camera_movement_speed);
+  turret.set_laser(data[0xE]);
+  turret.set_warning_led(data[0xE]);
+  turret.set_lights(data[0xC], data[0xD]);
 }
 
 void handle_package(uint8_t* data) {
@@ -67,6 +71,16 @@ void handle_package(uint8_t* data) {
   bool inertial_driving = data[0xE] & 0x1;
   bool camera_mode_bind = data[0xE] & 0x2;
 
+  uint8_t gun_ready_mode = (data[0xE] >> 6) & 0x1;
+
+  uint8_t gun_state = 0;
+  if (gun_ready_mode && turret.shell_connected)
+    gun_state = 2;
+  else if (gun_ready_mode)
+    gun_state = 1;
+
+  CommandEngine.set_incoming_data(data[0xA]);
+
   handle_front_camera_control(camera, camera_mode_bind, data[0xB]);
   handle_lights(data);
   driving.handle_driving(drive_joy_x, drive_joy_y, drive_joy_r, drive_speed, inertial_driving);
@@ -79,20 +93,25 @@ void handle_package(uint8_t* data) {
     case BACK_CAMERA_ID:
       osd.set_back_view(driving.left_track_power, driving.right_track_power, driving.left_track_forward_direction, driving.right_track_forward_direction);
       break;
+    case TURRET_CAMERA_ID:
+      osd.set_commander_view(driving.left_track_power, driving.right_track_power, driving.left_track_forward_direction, driving.right_track_forward_direction, (uint8_t)map(camera, 0, 255, 0, 10));
+      break;
+    case GUN_CAMERA_ID:
+      osd.set_gunner_view(driving.left_track_power, driving.right_track_power, driving.left_track_forward_direction, driving.right_track_forward_direction, turret.get_loader_state(), gun_state);
+      break;
   }
 }
 
 
 void send_package() {
-  static byte data[3] = { 0 };
-
+  static byte data[7] = { 0 };
   data[0x0] = battery.voltage_intpart;
   data[0x1] = battery.voltage_decpart;
   data[0x2] = battery.capacity;
-
-  // for (int i = 0; i < 3; i++)
-  //   Serial.print(data[i]);
-  // Serial.println();
+  data[0x3] = CommandEngine.get_command();
+  data[0x4] = CommandEngine.get_status();
+  data[0x5] = CommandEngine.get_error_code();
+  data[0x6] = (turret.shell_connected << 3) | turret.get_loader_state();
 
   driver.send(data, sizeof(data));
   driver.waitPacketSent();
@@ -137,20 +156,27 @@ void handle_commutication() {
     }
   } else {
     //Serial.println("Timeout");
-    driving.enable_motors(false);
+    //driving.enable_motors(false);
   }
 }
 
 void loop() {
   driving.enable_motors(true);
   handle_commutication();
-  // if (Serial2.available() > 0) {
-    
-  //   Serial.println((uint8_t) Serial2.parseInt());
-  // }
-  
+
   lights.tick();
   logger.tick();
   battery.tick();
   turret.tick();
+
+  if (CommandEngine.is_task()) {
+    CEModule.send(CommandEngine.get_task());
+  }
+
+  CEStatus s = CEModule.get_status();
+  if (s == CEStatus::DONE) {
+    CommandEngine.finish();
+  } else if (s == CEStatus::FAILED) {
+    CommandEngine.fail(CEModule.get_error_code());
+  }
 }

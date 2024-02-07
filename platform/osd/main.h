@@ -3,6 +3,8 @@
 
 #include "front_view.h"
 #include "back_view.h"
+#include "commander_view.h"
+#include "gunner_view.h"
 
 //#define ARDUINO_CONSOLE
 
@@ -18,7 +20,6 @@ void setup() {
   osd->set_display_offsets(40, 30);
   osd->set_blink_params(_8fields, _3BT_BT);
   osd->activate_OSD(true);
-  osd->print("START", 5, 5, false, false);
 }
 
 void loop() {
@@ -39,6 +40,14 @@ void loop() {
       case 0x2:
         osd->clear();
         set_back_view(package_buffer, osd);
+        break;
+      case 0x3:
+        osd->clear();
+        set_commander_view(package_buffer, osd);
+        break;
+      case 0x4:
+        osd->clear();
+        set_gunner_view(package_buffer, osd);
         break;
     }
   }

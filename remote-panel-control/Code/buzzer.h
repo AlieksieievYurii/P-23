@@ -3,6 +3,7 @@
 
 #define BEEP_DURATION 100
 #define BEEP_ERROR_DURATION 500
+#define BEEP_WARNING_DURATION 300
 
 #include "config.h"
 
@@ -20,9 +21,19 @@ public:
     _error = true;
   }
 
+  void warning(bool activate) {
+    _warning = activate;
+  }
+
   void tick() {
     if (_error) {
       if (millis() - _beep_timestamp > BEEP_ERROR_DURATION) {
+        _beep_state = !_beep_state;
+        digitalWrite(_buzzer_pin, _beep_state);
+        _beep_timestamp = millis();
+      }
+    } else if (_warning) {
+        if (millis() - _beep_timestamp > BEEP_WARNING_DURATION) {
         _beep_state = !_beep_state;
         digitalWrite(_buzzer_pin, _beep_state);
         _beep_timestamp = millis();
@@ -38,6 +49,7 @@ private:
   uint32_t _beep_timestamp = 0;
   bool _beep_state = false;
   bool _error = false;
+  bool _warning = false;
 };
 
 Buzzer BuzzerInstance(BUZZER);

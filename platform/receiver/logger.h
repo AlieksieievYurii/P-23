@@ -35,7 +35,7 @@ public:
       digitalWrite(_led_pin, _blink_state);
       _last_tick = millis();
     }
-    //test();
+
 #ifdef DEBUG
     if (_message_send != true) {
       switch (_logger_state) {
