@@ -1,1 +1,0 @@
-print("abc".__getitem__(1))
