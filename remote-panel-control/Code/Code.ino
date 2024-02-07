@@ -3,22 +3,21 @@
 #include <RHEncryptedDriver.h>
 #include <Speck.h>
 
+#include "command_engine.h"
 #include "buzzer.h"
 #include "config.h"
 #include "display.h"
+
 
 RH_NRF24 nrf24(CHIP_ENABLE_IN, CHIP_SELECT_IN);
 Speck cipher;
 RHEncryptedDriver driver(nrf24, cipher);
 
-#define READ_ANALOG_VALUE(pin) map(analogRead(pin), 0, 1023, 0, 255)
-
-#define IN_RANGE(x, A, B) A <= x&& x <= B
-
 #define SEND_PACKAGE_SIZE 15
 
 bool camera_bind_mode = true;
 bool camera_joy_button_flag = false;
+bool shell_connected = false;
 
 uint8_t get_control_data() {
   uint8_t value = 0;
@@ -28,13 +27,16 @@ uint8_t get_control_data() {
   uint8_t battle_mode = 0;
   uint16_t battle_mode_analog_value = analogRead(BATTLE_MODE_DOUBLE_SWITCH);
   if (battle_mode_analog_value <= 341)
-    battle_mode = 0; // Battle mode C
+    battle_mode = 0;  // Battle mode C
   else if (battle_mode_analog_value > 342 && battle_mode_analog_value <= 684)
-    battle_mode = 1; // Battle mode A
+    battle_mode = 1;  // Battle mode A
   else if (battle_mode_analog_value >= 685)
-    battle_mode = 2; // Battle mode B
-  
+    battle_mode = 2;  // Battle mode B
+
   value |= battle_mode << 2;
+  value |= IS_SWITCH_ON(LASER_SWITCH) << 4;
+  value |= IS_SWITCH_ON(GUN_STABILIZER_SWITCH) << 5;
+  value |= (IS_SWITCH_ON(KEY_SWITCH) && IS_SWITCH_ON(FIRE_SWITCH)) << 6;
 
   return value;
 }
@@ -90,7 +92,7 @@ uint8_t* get_data() {
 
   data[0x8] = READ_ANALOG_VALUE(DRIVING_SPEED_POTENTIOMETER);
   data[0x9] = READ_ANALOG_VALUE(ARM_TURRET_SPEED_POTENTIOMETER);
-  data[0xA] = READ_ANALOG_VALUE(PROG_POTENTIOMETER);
+  data[0xA] = CommandEngine.get_command();
   data[0xB] = READ_ANALOG_VALUE(CAMERA_MOVEMENT_SPEED_POTENTIOMETER);
 
   data[0xC] = get_lights_data_and_camera_selection();
@@ -168,10 +170,118 @@ void handle_display_buttons() {
 }
 
 void handle_response(byte* response) {
-  DisplayInstance.battery_voltage = (float)response[0] + (float)response[1] / 100.0;
-  DisplayInstance.battery_indicator = response[2];
+  DisplayInstance.battery_voltage = (float)response[0x0] + (float)response[0x1] / 100.0;
+  DisplayInstance.battery_indicator = response[0x2];
+  CommandEngine.set_incoming_data(response[0x3], response[0x4], response[0x5]);
+  ConfigHolderInstance.loader_state = response[0x6] & 0x7;
+  shell_connected = (response[0x6] >> 3) & 0x1;
 }
 
+void handle_loader_leds(void) {
+  static uint32_t timestamp = 0;
+  static bool flag = false;
+  switch (ConfigHolderInstance.loader_state) {
+    case LS_REQUIRES_CALIBRATION:
+      digitalWrite(LOADER_TAKE_RED_LED, HIGH);
+      digitalWrite(LOADER_LOAD_RED_LED, HIGH);
+      digitalWrite(LOADER_LOAD_GREEN_LED, LOW);
+      digitalWrite(LOADER_TAKE_GREEN_LED, LOW);
+      break;
+    case LS_CALIBRATION:
+      digitalWrite(LOADER_TAKE_RED_LED, LOW);
+      digitalWrite(LOADER_LOAD_RED_LED, LOW);
+      if (millis() - timestamp >= 500) {
+        digitalWrite(LOADER_LOAD_GREEN_LED, flag);
+        digitalWrite(LOADER_TAKE_GREEN_LED, !flag);
+        flag = !flag;
+        timestamp = millis();
+      }
+      break;
+    case LS_LOADED:
+      digitalWrite(LOADER_TAKE_RED_LED, LOW);
+      digitalWrite(LOADER_LOAD_RED_LED, LOW);
+      digitalWrite(LOADER_LOAD_GREEN_LED, LOW);
+      digitalWrite(LOADER_TAKE_GREEN_LED, HIGH);
+      break;
+    case LS_UNLOADED:
+      digitalWrite(LOADER_TAKE_RED_LED, LOW);
+      digitalWrite(LOADER_LOAD_RED_LED, LOW);
+      digitalWrite(LOADER_LOAD_GREEN_LED, HIGH);
+      digitalWrite(LOADER_TAKE_GREEN_LED, LOW);
+      break;
+    case LS_LOADING:
+      if (millis() - timestamp >= 500) {
+        digitalWrite(LOADER_TAKE_RED_LED, LOW);
+        digitalWrite(LOADER_LOAD_RED_LED, LOW);
+        digitalWrite(LOADER_LOAD_GREEN_LED, flag);
+        digitalWrite(LOADER_TAKE_GREEN_LED, LOW);
+        flag = !flag;
+        timestamp = millis();
+      }
+      break;
+    case LS_UNLOADING:
+      if (millis() - timestamp >= 500) {
+        digitalWrite(LOADER_TAKE_RED_LED, LOW);
+        digitalWrite(LOADER_LOAD_RED_LED, LOW);
+        digitalWrite(LOADER_LOAD_GREEN_LED, LOW);
+        digitalWrite(LOADER_TAKE_GREEN_LED, flag);
+        flag = !flag;
+        timestamp = millis();
+      }
+      break;
+    case LS_RELOADING:
+      if (millis() - timestamp >= 500) {
+        digitalWrite(LOADER_TAKE_RED_LED, LOW);
+        digitalWrite(LOADER_LOAD_RED_LED, LOW);
+        digitalWrite(LOADER_LOAD_GREEN_LED, flag);
+        digitalWrite(LOADER_TAKE_GREEN_LED, flag);
+        flag = !flag;
+        timestamp = millis();
+      }
+      break;
+    case LS_FAILURE:
+      if (millis() - timestamp >= 500) {
+        digitalWrite(LOADER_TAKE_RED_LED, flag);
+        digitalWrite(LOADER_LOAD_RED_LED, flag);
+        digitalWrite(LOADER_LOAD_GREEN_LED, LOW);
+        digitalWrite(LOADER_TAKE_GREEN_LED, LOW);
+        flag = !flag;
+        timestamp = millis();
+      }
+      break;
+  }
+}
+
+void handle_fire_control_leds(void) {
+  static uint32_t timestamp = 0;
+  static bool flag = false;
+
+  if (IS_SWITCH_ON(KEY_SWITCH) && IS_SWITCH_ON(FIRE_SWITCH) && shell_connected) {
+    BuzzerInstance.warning(true);
+    if (millis() - timestamp >= 300) {
+      digitalWrite(FIRE_CON_RED_LED, LOW);
+      digitalWrite(FIRE_CON_GREEN_LED, flag);
+      flag = !flag;
+      timestamp = millis();
+    }
+  } else if (IS_SWITCH_ON(KEY_SWITCH) && IS_SWITCH_ON(FIRE_SWITCH) && !shell_connected) {
+    BuzzerInstance.warning(false);
+    if (millis() - timestamp >= 300) {
+      digitalWrite(FIRE_CON_RED_LED, flag);
+      digitalWrite(FIRE_CON_GREEN_LED, LOW);
+      flag = !flag;
+      timestamp = millis();
+    }
+  } else if (IS_SWITCH_ON(KEY_SWITCH) && !IS_SWITCH_ON(FIRE_SWITCH)) {
+    digitalWrite(FIRE_CON_RED_LED, HIGH);
+    digitalWrite(FIRE_CON_GREEN_LED, LOW);
+    BuzzerInstance.warning(false);
+  } else {
+    digitalWrite(FIRE_CON_RED_LED, LOW);
+    digitalWrite(FIRE_CON_GREEN_LED, LOW);
+    BuzzerInstance.warning(false);
+  }
+}
 
 void loop() {
   static uint32_t last_received_packed_time = millis();
@@ -185,17 +295,10 @@ void loop() {
   }
 
   uint8_t* data = get_data();
-  // for (int i = 0; i < SEND_PACKAGE_SIZE; i++) {
-  //   Serial.print(data[i]);
-  // }
-  // Serial.println();
-  // delay(2000);
 
   driver.send(data, SEND_PACKAGE_SIZE);
   driver.waitPacketSent();
 
-
-  // // Now wait for a reply
   byte buf[RH_NRF24_MAX_MESSAGE_LEN] = { 0 };
   uint8_t len = sizeof(buf);
 
@@ -218,6 +321,8 @@ void loop() {
   }
 
   handle_display_buttons();
+  handle_loader_leds();
+  handle_fire_control_leds();
 
   if (ConfigHolderInstance.is_communication_channel_changed()) {
     Serial.println(ConfigHolderInstance.communication_channel);
@@ -238,5 +343,29 @@ void loop() {
   } else {
     digitalWrite(CONNECTION_STATIUS_LED_RED_PIN, LOW);
     digitalWrite(CONNECTION_STATIUS_LED_GREEN_PIN, LOW);
+  }
+
+  CEStatus s = CommandEngine.get_status();
+  ConfigHolderInstance.command_execution_status = s;
+  ConfigHolderInstance.last_error_code = CommandEngine.get_last_error_code();
+
+  if (s == CEStatus::IDLE) {
+    if (!digitalRead(RELOADER_LOAD_BUTTON)) {
+      if (digitalRead(AUTO_SHOOTING_SWITCH))
+        CommandEngine.send(COMMAND_LOAD);
+      else
+        CommandEngine.send(COMMAND_RELOAD);
+    } else if (!digitalRead(RELOADER_TAKE_BUTTON)) {
+      CommandEngine.send(COMMAND_UNLOAD);
+    }
+
+    uint8_t command = ConfigHolderInstance.get_command();
+    if (command != 0) {
+      CommandEngine.send(command);
+    }
+
+    if (IS_SWITCH_ON(KEY_SWITCH) && IS_SWITCH_ON(FIRE_SWITCH) && !digitalRead(FIRE_B_BUTTON)) {
+      CommandEngine.send(COMMAND_MAKE_SHOT);
+    }
   }
 }

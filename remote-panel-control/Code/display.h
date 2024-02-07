@@ -14,16 +14,28 @@
 #define REFRESH_TIME 2000
 
 #define WINDOW_CONFIG_ID 3
+#define WINDOW_COMMANDS_ID 1
+#define WINDOW_OVERVIEW 0
 
 #define OLED_RESET -1
 
 #define MAX(VALUE, CONSTRAIN) (((VALUE) > (CONSTRAIN)) ? (CONSTRAIN) : (VALUE))
 
-#define CONFIG_VIEW_TITLE_POSITION 22
 
 #define CONFIG_VIEW_MAX_PRINTING_ITEMS 4
-
 #define CONFIG_VIEW_ITEM_PRINTING_POSITION_START 29
+
+
+#define COMMANDS_VIEW_MAX_PRINTING_ITEMS 4
+#define COMMANDS_VIEW_ITEM_PRINTING_POSITION_START 29
+
+#define RESET_VALUES \
+  _config_view_window_item_point = 0; \
+  _config_view_window_item_hower = 0; \
+  _config_view_window_item_print_step = 0; \
+  _commands_view_window_item_point = 0; \
+  _commands_view_window_item_hower = 0; \
+  _commands_view_window_item_print_step = 0;
 
 enum ModeSelection {
   VIEW,
@@ -59,54 +71,53 @@ public:
   void next_menu_item() {
     if (_mode == MENU) {
 
-      if (++_config_view_window_item_point >= CONFIG_VIEW_ITEM_COUNTS) {
-        _config_view_window_item_point = 0;
-        _config_view_window_item_hower = 0;
-        _config_view_window_item_print_step = 0;
-      } else {
-        if (_config_view_window_item_hower < CONFIG_VIEW_MAX_PRINTING_ITEMS - 1)
-          _config_view_window_item_hower++;
-        else
-          _config_view_window_item_print_step++;
-      }
+      if (_view_window_selected == WINDOW_CONFIG_ID)
+        _next_item_in_config_view();
+      else if (_view_window_selected == WINDOW_COMMANDS_ID)
+        _next_item_in_commands_view();
 
     } else if (_mode == VIEW) {
+
       if (_view_window_selected < 3)
         _view_window_selected++;
       else
         _view_window_selected = 0;
+
     } else if (_mode == ITEM) {
-      if (_item_temp_selection < _config_holder->config_view_items[_config_view_window_item_point].values_number - 1)
-        _item_temp_selection++;
-      else
-        _item_temp_selection = 0;
+
+      if (_view_window_selected == WINDOW_CONFIG_ID) {
+        if (_config_view_item_temp_selection < _config_holder->config_view_items[_config_view_window_item_point].values_number - 1)
+          _config_view_item_temp_selection++;
+        else
+          _config_view_item_temp_selection = 0;
+      }
     }
     draw();
   }
 
   void previous_menu_item() {
     if (_mode == MENU) {
-      if (_config_view_window_item_point > 0) {
-        _config_view_window_item_point--;
-        if (_config_view_window_item_hower > 0)
-          _config_view_window_item_hower--;
-        else
-          _config_view_window_item_print_step--;
-      } else {
-        _config_view_window_item_point = CONFIG_VIEW_ITEM_COUNTS - 1;
-        _config_view_window_item_hower = CONFIG_VIEW_MAX_PRINTING_ITEMS - 1;
-        _config_view_window_item_print_step = CONFIG_VIEW_ITEM_COUNTS - CONFIG_VIEW_MAX_PRINTING_ITEMS;
-      }
+
+      if (_view_window_selected == WINDOW_CONFIG_ID)
+        _previous_item_in_config_view();
+      else if (_view_window_selected == WINDOW_COMMANDS_ID)
+        _previous_item_in_commands_view();
+
     } else if (_mode == VIEW) {
+
       if (_view_window_selected > 0)
         _view_window_selected--;
       else
         _view_window_selected = 3;
+
     } else if (_mode == ITEM) {
-      if (_item_temp_selection > 0)
-        _item_temp_selection--;
-      else
-        _item_temp_selection = _config_holder->config_view_items[_config_view_window_item_point].values_number - 1;
+
+      if (_view_window_selected == WINDOW_CONFIG_ID) {
+        if (_config_view_item_temp_selection > 0)
+          _config_view_item_temp_selection--;
+        else
+          _config_view_item_temp_selection = _config_holder->config_view_items[_config_view_window_item_point].values_number - 1;
+      }
     }
 
     draw();
@@ -114,15 +125,20 @@ public:
 
   void select() {
     if (_mode == VIEW) {
-      _config_view_window_item_hower = 0;
-      _config_view_window_item_print_step = 0;
+      RESET_VALUES;
       _mode = MENU;
     } else if (_mode == MENU) {
-      _mode = ITEM;
-      _item_temp_selection = _config_holder->config_view_items[_config_view_window_item_point].selected_item;
+
+      if (_view_window_selected == WINDOW_CONFIG_ID) {
+        _mode = ITEM;
+        _config_view_item_temp_selection = _config_holder->config_view_items[_config_view_window_item_point].selected_item;
+      } else if (_view_window_selected == WINDOW_COMMANDS_ID) {
+        _config_holder->send_command(_config_holder->command_items[_commands_view_window_item_point].id);
+      }
+
     } else if (_mode == ITEM) {
-      _config_holder->config_view_items[_config_view_window_item_point].selected_item = _item_temp_selection;
-      _item_temp_selection = 0;
+      _config_holder->config_view_items[_config_view_window_item_point].selected_item = _config_view_item_temp_selection;
+      _config_view_item_temp_selection = 0;
       _mode = MENU;
     }
 
@@ -131,12 +147,10 @@ public:
 
   void back() {
     if (_mode == ITEM) {
-      _item_temp_selection = 0;
+      _config_view_item_temp_selection = 0;
       _mode = MENU;
     } else if (_mode == MENU) {
-      _config_view_window_item_point = 0;
-      _config_view_window_item_hower = 0;
-      _config_view_window_item_print_step = 0;
+      RESET_VALUES;
       _mode = VIEW;
     }
 
@@ -154,6 +168,7 @@ public:
     _config_holder->back_light_mode = _config_holder->config_view_items[1].selected_item;
     _config_holder->front_light_mode = _config_holder->config_view_items[2].selected_item;
     _config_holder->long_light_mode = _config_holder->config_view_items[3].selected_item;
+    _config_holder->turret_light_mode = _config_holder->config_view_items[4].selected_item;
     // -----------------------------------
   }
 
@@ -169,7 +184,11 @@ private:
   uint8_t _config_view_window_item_hower = 0;
   uint8_t _config_view_window_item_point = 0;
   uint8_t _config_view_window_item_print_step = 0;
-  uint8_t _item_temp_selection = 0;
+  uint8_t _config_view_item_temp_selection = 0;
+
+  uint8_t _commands_view_window_item_hower = 0;
+  uint8_t _commands_view_window_item_point = 0;
+  uint8_t _commands_view_window_item_print_step = 0;
 
   ConfigHolder* _config_holder;
 
@@ -218,6 +237,10 @@ private:
 
     if (_view_window_selected == WINDOW_CONFIG_ID) {
       _print_config_view();
+    } else if (_view_window_selected == WINDOW_COMMANDS_ID) {
+      _print_commands_view();
+    } else if (_view_window_selected == WINDOW_OVERVIEW) {
+      _print_overview_view();
     }
 
     display.display();
@@ -246,13 +269,114 @@ private:
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(printing_value_position + 18, CONFIG_VIEW_ITEM_PRINTING_POSITION_START + i * 9);
       if (_mode == ITEM && _config_view_window_item_point == config_item_position) {
-        char* temp_selected_value = _config_holder->config_view_items[config_item_position].values[_item_temp_selection];
+        char* temp_selected_value = _config_holder->config_view_items[config_item_position].values[_config_view_item_temp_selection];
         display.drawRect(printing_value_position + 15, CONFIG_VIEW_ITEM_PRINTING_POSITION_START + i * 9 - 1, strlen(temp_selected_value) * 8, 9, SSD1306_INVERSE);
         display.println(temp_selected_value);
       } else {
         display.println(_config_holder->config_view_items[config_item_position].values[_config_holder->config_view_items[config_item_position].selected_item]);
       }
     }
+  }
+
+  void _previous_item_in_config_view() {
+    if (_config_view_window_item_point > 0) {
+      _config_view_window_item_point--;
+      if (_config_view_window_item_hower > 0)
+        _config_view_window_item_hower--;
+      else
+        _config_view_window_item_print_step--;
+    } else {
+      _config_view_window_item_point = CONFIG_VIEW_ITEM_COUNTS - 1;
+      _config_view_window_item_hower = CONFIG_VIEW_MAX_PRINTING_ITEMS - 1;
+      _config_view_window_item_print_step = CONFIG_VIEW_ITEM_COUNTS - CONFIG_VIEW_MAX_PRINTING_ITEMS;
+    }
+  }
+
+  void _next_item_in_config_view() {
+    if (++_config_view_window_item_point >= CONFIG_VIEW_ITEM_COUNTS) {
+      _config_view_window_item_point = 0;
+      _config_view_window_item_hower = 0;
+      _config_view_window_item_print_step = 0;
+    } else {
+      if (_config_view_window_item_hower < CONFIG_VIEW_MAX_PRINTING_ITEMS - 1)
+        _config_view_window_item_hower++;
+      else
+        _config_view_window_item_print_step++;
+    }
+  }
+
+  void _next_item_in_commands_view() {
+    if (++_commands_view_window_item_point >= COMMAND_ITEMS_COUNTS) {
+      _commands_view_window_item_point = 0;
+      _commands_view_window_item_hower = 0;
+      _commands_view_window_item_print_step = 0;
+    } else {
+      if (_commands_view_window_item_hower < COMMANDS_VIEW_MAX_PRINTING_ITEMS - 1)
+        _commands_view_window_item_hower++;
+      else
+        _commands_view_window_item_print_step++;
+    }
+  }
+
+  void _previous_item_in_commands_view() {
+    if (_commands_view_window_item_point > 0) {
+      _commands_view_window_item_point--;
+      if (_commands_view_window_item_hower > 0)
+        _commands_view_window_item_hower--;
+      else
+        _commands_view_window_item_print_step--;
+    } else {
+      _commands_view_window_item_point = COMMAND_ITEMS_COUNTS - 1;
+      _commands_view_window_item_hower = COMMANDS_VIEW_MAX_PRINTING_ITEMS - 1;
+      _commands_view_window_item_print_step = COMMAND_ITEMS_COUNTS - COMMANDS_VIEW_MAX_PRINTING_ITEMS;
+    }
+  }
+
+  void _print_commands_view() {
+    display.setTextSize(1);
+    display.setCursor(0, 21);
+    display.setTextColor(SSD1306_WHITE);
+    display.println("$ Commands");
+
+    for (uint8_t i = 0; i < COMMANDS_VIEW_MAX_PRINTING_ITEMS; i++) {
+      if ((_mode == MENU || _mode == ITEM) && _commands_view_window_item_hower == i)
+        display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+      else
+        display.setTextColor(SSD1306_WHITE);
+
+      display.setCursor(0, COMMANDS_VIEW_ITEM_PRINTING_POSITION_START + i * 9);
+      uint8_t config_item_position = i + _commands_view_window_item_print_step;
+      display.println(_config_holder->command_items[config_item_position].name);
+    }
+    display.setTextColor(SSD1306_WHITE);
+    display.drawLine(70, 21, 70, 40, SSD1306_WHITE);
+    display.drawLine(70, 40, 140, 40, SSD1306_WHITE);
+    display.setCursor(72, 21);
+    display.println("State:");
+    display.setCursor(72, 30);
+    if (_config_holder->last_error_code != 0)
+      display.println(repr_CE_status(CEStatus::FAILED));
+    else
+      display.println(repr_CE_status(_config_holder->command_execution_status));
+  }
+
+  void _print_overview_view(void) {
+    display.setTextSize(1);
+    display.setCursor(0, 21);
+    display.setTextColor(SSD1306_WHITE);
+    display.println("Loader:");
+    display.setCursor(45, 21);
+    display.println(repr_loader_state(_config_holder->loader_state));
+    display.setCursor(0, 30);
+    display.println("Task status:");
+    display.setCursor(75, 30);
+    display.println(repr_CE_status(_config_holder->command_execution_status));
+    display.setCursor(0, 39);
+    display.println("Error:");
+    display.setCursor(45, 39);
+    display.println(_config_holder->last_error_code);
+    display.setCursor(0, 48);
+    display.println(repr_CE_error(_config_holder->last_error_code));
   }
 };
 

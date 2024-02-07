@@ -7,6 +7,9 @@
 unsigned char ENCRYPTION_KEY[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
 
 #define IS_SWITCH_ON(PIN) !digitalRead(PIN)
+#define READ_ANALOG_VALUE(pin) map(analogRead(pin), 0, 1023, 0, 255)
+
+#define IN_RANGE(x, A, B) A <= x &&x <= B
 
 #define LIGHT_SWITCH_BACK 43
 #define LIGHT_SWITCH_FRONT 44
@@ -50,8 +53,8 @@ unsigned char ENCRYPTION_KEY[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 #define AUTO_SHOOTING_SWITCH 12
 #define FIRE_SWITCH 11
 #define KEY_SWITCH 10
-#define FIRE_CON_GREEN_LED 9
-#define FIRE_CON_RED_LED 8
+#define FIRE_CON_GREEN_LED 8
+#define FIRE_CON_RED_LED 9
 
 #define ARM_TURRET_SPEED_POTENTIOMETER A8
 #define PROG_POTENTIOMETER A9
@@ -73,6 +76,7 @@ unsigned char ENCRYPTION_KEY[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 #define DISPLAY_ADDRESS 0x3C
 
 #define CONFIG_VIEW_ITEM_COUNTS 9
+#define COMMAND_ITEMS_COUNTS 13
 
 #define DISCONNECTION_TIMEOUT 5000
 #define ORANGE_PING_DELAY 100
@@ -148,10 +152,16 @@ struct ConfigItem {
   char values[5][5] = { 0 };
 };
 
+struct CommandItem {
+  char name[7];
+  uint8_t id;
+};
+
 
 class ConfigHolder {
 public:
   struct ConfigItem *config_view_items;
+  struct CommandItem *command_items;
 
   uint8_t back_light_mode = 0;    // 0 - standalone, 1 - blinking, 2 - fast blinking
   uint8_t front_light_mode = 0;   // 0 - standalone, 1 - blinking, 2 - fast blinking
@@ -159,6 +169,10 @@ public:
   uint8_t turret_light_mode = 0;  // 0 - standalone, 1 - blinking, 2 - fast blinking
 
   uint8_t communication_channel = 1;
+
+  CEStatus command_execution_status = CEStatus::IDLE;
+  uint8_t last_error_code = 0;
+  uint8_t loader_state = 0;
 
   ConfigHolder() {
 
@@ -189,11 +203,11 @@ public:
     strcpy(long_light.values[1], "BL");
     strcpy(long_light.values[2], "FBL");
 
-    struct ConfigItem b;
-    strcpy(b.name, "B");
-    strcpy(b.values[0], "5");
-    strcpy(b.values[1], "BL");
-    strcpy(b.values[2], "FBL");
+    struct ConfigItem turret_light;
+    strcpy(turret_light.name, "Turret Lights");
+    strcpy(turret_light.values[0], "S");
+    strcpy(turret_light.values[1], "BL");
+    strcpy(turret_light.values[2], "FBL");
 
     struct ConfigItem c;
     strcpy(c.name, "C");
@@ -219,8 +233,76 @@ public:
     strcpy(f.values[1], "BL");
     strcpy(f.values[2], "A");
 
-    static struct ConfigItem buffer[CONFIG_VIEW_ITEM_COUNTS] = { comm_channel, back_light, front_light, long_light, b, c, d, e, f };
+    struct CommandItem ci_calibrate;
+    strcpy(ci_calibrate.name, "Cal");
+    ci_calibrate.id = 0x04;
+
+    struct CommandItem ci_connect_loader;
+    strcpy(ci_connect_loader.name, "CL");
+    ci_connect_loader.id = 0x07;
+
+    struct CommandItem ci_disconnect_loader;
+    strcpy(ci_disconnect_loader.name, "DCL");
+    ci_disconnect_loader.id = 0x08;
+
+    struct CommandItem ci_falcify_calibration;
+    strcpy(ci_falcify_calibration.name, "FC");
+    ci_falcify_calibration.id = 0x11;
+
+    struct CommandItem ci_open_loading_drum_gate;
+    strcpy(ci_open_loading_drum_gate.name, "OLDG");
+    ci_open_loading_drum_gate.id = 0x05;
+
+    struct CommandItem ci_close_loading_drum_gate;
+    strcpy(ci_close_loading_drum_gate.name, "CLDG");
+    ci_close_loading_drum_gate.id = 0x06;
+
+    struct CommandItem ci_rotate_loading_drum_clockwise;
+    strcpy(ci_rotate_loading_drum_clockwise.name, "RLDC");
+    ci_rotate_loading_drum_clockwise.id = 0x09;
+
+    struct CommandItem ci_rotate_loading_drum_counter_clockwise;
+    strcpy(ci_rotate_loading_drum_counter_clockwise.name, "RLDCC");
+    ci_rotate_loading_drum_counter_clockwise.id = 0x0A;
+
+    struct CommandItem ci_push_feeder;
+    strcpy(ci_push_feeder.name, "PUSHF");
+    ci_push_feeder.id = 0x0B;
+
+    struct CommandItem ci_pull_feeder;
+    strcpy(ci_pull_feeder.name, "PULLF");
+    ci_pull_feeder.id = 0x0C;
+
+    struct CommandItem ci_open_breechblock_gate;
+    strcpy(ci_open_breechblock_gate.name, "OBBG");
+    ci_open_breechblock_gate.id = 0x0D;
+
+    struct CommandItem ci_close_breechblock_gate;
+    strcpy(ci_close_breechblock_gate.name, "CBBG");
+    ci_close_breechblock_gate.id = 0x0E;
+
+    struct CommandItem ci_pre_close_breechblock_gate;
+    strcpy(ci_pre_close_breechblock_gate.name, "PCBBG");
+    ci_pre_close_breechblock_gate.id = 0x0F;
+
+    static struct ConfigItem buffer[CONFIG_VIEW_ITEM_COUNTS] = { comm_channel, back_light, front_light, long_light, turret_light, c, d, e, f };
+    static struct CommandItem command_items_buff[COMMAND_ITEMS_COUNTS] = {
+      ci_calibrate,
+      ci_falcify_calibration,
+      ci_connect_loader,
+      ci_disconnect_loader,
+      ci_open_loading_drum_gate,
+      ci_close_loading_drum_gate,
+      ci_rotate_loading_drum_clockwise,
+      ci_rotate_loading_drum_counter_clockwise,
+      ci_push_feeder,
+      ci_pull_feeder,
+      ci_open_breechblock_gate,
+      ci_close_breechblock_gate,
+      ci_pre_close_breechblock_gate
+    };
     config_view_items = buffer;
+    command_items = command_items_buff;
   }
   bool is_communication_channel_changed() {
     if (communication_channel != _last_communication_chanel_value) {
@@ -229,8 +311,19 @@ public:
     }
     return false;
   }
+
+  uint8_t get_command() {
+    uint8_t buf = _command_to_execute;
+    _command_to_execute = 0;
+    return buf;
+  }
+
+  void send_command(const uint8_t command) {
+    _command_to_execute = command;
+  }
 private:
   uint8_t _last_communication_chanel_value = 1;
+  uint8_t _command_to_execute = 0;
 };
 
 ConfigHolder ConfigHolderInstance;
