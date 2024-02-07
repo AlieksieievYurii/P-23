@@ -14,13 +14,24 @@ Features:
 - Loading Drum can contain 6 shells
 - Gun angle: -10..15 degrees
 - Can shoot
+- Radio control using nrf24l01
+- Special Panel Control
 
 ![Tank Platform jhf](https://github.com/AlieksieievYurii/P-23/assets/39415360/aa100399-352b-4e76-bb74-02f8acf59fc8)
 ![urf](https://github.com/AlieksieievYurii/P-23/assets/39415360/e697cb0c-ef1e-459d-8845-2fcfade69cf9)
 ![Tank Platform v142](https://github.com/AlieksieievYurii/P-23/assets/39415360/0c03724d-af4b-43fe-aa4b-5b64b1bab898)
 
 
+# Modules Architecture Overview
+
+![p-23-modules-architecture drawio](https://github.com/AlieksieievYurii/P-23/assets/39415360/693e9efb-c09d-47fd-a3eb-a4c00fb6d0d7)
+
 
 # Project Structure
+
+* `docs` - contains different documents.
 * `platform` - the folder contains sources and docs regarding the platform itself.
-* `remote-panel-control` - the folder contains sources and docs regarding the radio control panel
+* `remote-panel-control` - the folder contains sources and docs regarding the radio control panel.
+* `turret` - folder contains sources and docs of the turret.
+* `index.html` - static web page containing information about donating of FPV drone for AFU.
+* `res` - contains resources for the web page.
