@@ -1,5 +1,4 @@
-
-Packet size: ?
+The main module is responsible for the turret control. It communicates with the platform through UART protocol.
 
 |  Address |                                                           Description                                                                 |
 |----------|---------------------------------------------------------------------------------------------------------------------------------------|
