@@ -3,7 +3,8 @@
 
 When I was a child, I always wanted to build a tank :D However, I didn't have the required skills for that. When I grew up,
 I remembered that "childhood dream" and decided to try to build a tank. The main idea is to create a fully functional military RC
-tank that can shoot and has a loading mechanism.
+tank that can shoot and has a loading mechanism. Besides that, the platform should be multifunctional so that I can add
+different modules like another turret or arm.
 
 Features:
 - Arduino Based Project (2x Mega, 3x Pro Mini)
@@ -17,6 +18,7 @@ Features:
 - Can shoot
 - Radio control using nrf24l01
 - Special Panel Control
+- First Person View
 
 ![Tank Platform 1](https://github.com/AlieksieievYurii/P-23/assets/39415360/aa100399-352b-4e76-bb74-02f8acf59fc8)
 ![Tank Platform 2](https://github.com/AlieksieievYurii/P-23/assets/39415360/e697cb0c-ef1e-459d-8845-2fcfade69cf9)
