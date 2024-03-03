@@ -20,6 +20,11 @@ Features:
 - Special Panel Control
 - First Person View
 
+## Video
+
+[![image](https://github.com/AlieksieievYurii/P-23/assets/39415360/4de5bbf2-7b9b-404e-b98d-c6bb9d57bedb)](https://www.youtube.com/watch?v=BsqAmx8mWu0)
+
+# Render
 ![Tank Platform 1](https://github.com/AlieksieievYurii/P-23/assets/39415360/aa100399-352b-4e76-bb74-02f8acf59fc8)
 ![Tank Platform 2](https://github.com/AlieksieievYurii/P-23/assets/39415360/e697cb0c-ef1e-459d-8845-2fcfade69cf9)
 ![Tank Platform 3](https://github.com/AlieksieievYurii/P-23/assets/39415360/0c03724d-af4b-43fe-aa4b-5b64b1bab898)
